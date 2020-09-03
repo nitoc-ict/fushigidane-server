@@ -3,8 +3,8 @@ CREATE DATABASE fushigidane;
 
 USE fushigidane;
 
-DROP TABLE IF EXISTS transitpoint;
-CREATE TABLE transitpoint
+DROP TABLE IF EXISTS transitpoints;
+CREATE TABLE transitpoints
 (
    id SERIAL PRIMARY KEY,
    address TEXT NOT NULL,
@@ -12,3 +12,5 @@ CREATE TABLE transitpoint
    latitude FLOAT,
    longitude FLOAT
 );
+
+INSERT INTO transitpoints(address, label, latitude, longitude) VALUES ('TEST', 'TEST', 0.0, 0.0);
