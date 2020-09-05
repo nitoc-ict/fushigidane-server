@@ -1,10 +1,8 @@
 package gettransitpoints
 
 import (
-	"log"
 	"math"
 
-	"github.com/kr/pretty"
 	"github.com/nitoc-ict/fushigidane-server/convertaddress"
 	"github.com/nitoc-ict/fushigidane-server/rdbms"
 	"github.com/pkg/errors"
@@ -38,82 +36,63 @@ func PullTransitPoints(label string) ([]TransitPoint, error) {
 	return transitpoints, nil
 }
 
-func SearchCandidatePoint(origin, destination, label string) []TransitPoint {
+func SearchCandidatePoint(origin, destination, label string) ([]TransitPoint, error) {
 	var transitpoints []TransitPoint
 
-	candidate, err := PullTransitPoints(label)
+	candidatePoint, err := PullTransitPoints(label)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.Wrap(err, "failed pull transit points")
 	}
 
-	originCoordinate, err := convertaddress.GetLonLat(origin)
+	originPoint, err := convertaddress.GetLonLat(origin)
 	if err != nil {
-		log.Println(err)
+		return nil, errors.Wrap(err, "failed get origin point lon lat")
 	}
-	transitpoints = append(transitpoints, TransitPoint{
-		Id:        0,
-		Address:   originCoordinate.Address,
-		Label:     label,
-		Latitude:  originCoordinate.Latitude,
-		Longitude: originCoordinate.Longitude,
-	})
-
-	destinationCoordinate, err := convertaddress.GetLonLat(destination)
+	destinationPoint, err := convertaddress.GetLonLat(destination)
 	if err != nil {
-		log.Println(err)
+		return nil, errors.Wrap(err, "failed get destination point lon lat")
 	}
 
-	nearDestination := euclideanDistance(candidate[0].Latitude, candidate[0].Longitude, destinationCoordinate.Latitude, destinationCoordinate.Longitude)
-	originPoint := TransitPoint{
-		Id:        0,
-		Address:   originCoordinate.Address,
-		Label:     label,
-		Latitude:  originCoordinate.Latitude,
-		Longitude: originCoordinate.Longitude,
-	}
+	distanceToDestination := euclideanDistance(originPoint.Latitude, originPoint.Longitude, destinationPoint.Latitude, destinationPoint.Longitude)
 
-	for _, e := range candidate {
-		if euclideanDistance(e.Latitude, e.Longitude, destinationCoordinate.Latitude, destinationCoordinate.Longitude) < nearDestination {
-			nearDestination = euclideanDistance(e.Latitude, e.Longitude, destinationCoordinate.Latitude, destinationCoordinate.Longitude)
+	next := candidatePoint[0]
+	minDisToOrigin := euclideanDistance(candidatePoint[0].Latitude, candidatePoint[0].Longitude, originPoint.Latitude, originPoint.Longitude)
+
+	for _, e := range candidatePoint {
+		tmpDisToDestination := euclideanDistance(e.Latitude, e.Longitude, destinationPoint.Latitude, destinationPoint.Longitude)
+		tmpDisToOrigin := euclideanDistance(e.Latitude, e.Longitude, originPoint.Latitude, originPoint.Longitude)
+
+		if tmpDisToOrigin < minDisToOrigin && tmpDisToDestination < distanceToDestination {
+			next = e
+			distanceToDestination = tmpDisToDestination
+			minDisToOrigin = tmpDisToOrigin
 		}
 	}
+	transitpoints = append(transitpoints, next)
 
-	shortestOriginDistance := euclideanDistance(candidate[0].Latitude, candidate[0].Longitude, originCoordinate.Latitude, originCoordinate.Longitude)
-	shortestDestinationDistance := euclideanDistance(candidate[0].Latitude, candidate[0].Longitude, destinationCoordinate.Latitude, destinationCoordinate.Longitude)
-	shortestPoint := candidate[0]
+	for {
+		distanceToDestination = euclideanDistance(transitpoints[len(transitpoints)-1].Latitude, transitpoints[len(transitpoints)-1].Longitude, destinationPoint.Latitude, destinationPoint.Longitude)
+		minDisToOrigin = euclideanDistance(candidatePoint[0].Latitude, candidatePoint[0].Longitude, transitpoints[len(transitpoints)-1].Latitude, transitpoints[len(transitpoints)-1].Longitude)
+		tmp := next
+		for _, e := range candidatePoint {
+			tmpDisToDestination := euclideanDistance(e.Latitude, e.Longitude, destinationPoint.Latitude, destinationPoint.Longitude)
+			tmpDisToOrigin := euclideanDistance(e.Latitude, e.Longitude, transitpoints[len(transitpoints)-1].Latitude, transitpoints[len(transitpoints)-1].Longitude)
 
-	for shortestDestinationDistance != nearDestination {
-		pretty.Println(originPoint)
-		for _, e := range candidate {
-			originDistance := euclideanDistance(e.Latitude, e.Longitude, originPoint.Latitude, originPoint.Longitude)
-			destinationDistance := euclideanDistance(e.Latitude, e.Longitude, destinationCoordinate.Latitude, destinationCoordinate.Longitude)
-
-			if originDistance+destinationDistance < shortestDestinationDistance+shortestOriginDistance {
-				shortestDestinationDistance = destinationDistance
-				shortestOriginDistance = originDistance
-				shortestPoint = TransitPoint{
-					Id:        e.Id,
-					Address:   e.Address,
-					Label:     e.Label,
-					Latitude:  e.Latitude,
-					Longitude: e.Longitude,
-				}
+			if tmpDisToOrigin < minDisToOrigin && tmpDisToDestination < distanceToDestination {
+				next = e
+				distanceToDestination = tmpDisToDestination
+				minDisToOrigin = tmpDisToOrigin
 			}
 		}
 
-		originPoint = shortestPoint
-		transitpoints = append(transitpoints, shortestPoint)
+		if tmp == next {
+			break
+		}
+
+		transitpoints = append(transitpoints, next)
 	}
 
-	transitpoints = append(transitpoints, TransitPoint{
-		Id:        0,
-		Address:   destinationCoordinate.Address,
-		Label:     label,
-		Latitude:  destinationCoordinate.Latitude,
-		Longitude: destinationCoordinate.Longitude,
-	})
-
-	return transitpoints
+	return transitpoints, nil
 }
 
 func euclideanDistance(originLat, originLong, destinationLat, destinationLong float64) float64 {
