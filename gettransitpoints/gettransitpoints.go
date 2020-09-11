@@ -11,13 +11,7 @@ import (
 func PullTransitPoints(label string) ([]TransitPoint, error) {
 	var transitpoints []TransitPoint
 
-	dbprepare, err := rdbms.Fushigidane.Prepare(`SELECT * FROM transitpoints WHERE label = 'sea';`)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed make prepare")
-	}
-	defer dbprepare.Close()
-
-	rows, err := dbprepare.Query()
+	rows, err := rdbms.Fushigidane.Query(`SELECT * FROM transitpoints WHERE (label = ?);`, label)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed Query `SELECT * FROM transitpoints WHERE label`")
 	}
