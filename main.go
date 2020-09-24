@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import "github.com/nitoc-ict/fushigidane-server/router"
 
 func main() {
-	fmt.Println("Hello")
+	router := router.NewRouter()
+
+	router.Logger.Fatal(router.Start(":5000"))
 }
