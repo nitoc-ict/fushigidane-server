@@ -7,3 +7,9 @@ type TransitPoint struct {
 	Latitude  float64
 	Longitude float64
 }
+
+type RouteRequest struct {
+	Origin      string `json:"origin"`
+	Destination string `json:"destination"`
+	Scenes      string `json:"scenes"`
+}

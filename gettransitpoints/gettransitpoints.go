@@ -2,11 +2,35 @@ package gettransitpoints
 
 import (
 	"math"
+	"net/http"
 
+	"github.com/labstack/echo"
 	"github.com/nitoc-ict/fushigidane-server/convertaddress"
 	"github.com/nitoc-ict/fushigidane-server/rdbms"
 	"github.com/pkg/errors"
 )
+
+func GetTransitPoints(c echo.Context) error {
+	var routeData RouteRequest
+
+	err := c.Bind(&routeData)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, `{"status": "error bind json"}`)
+
+		return nil
+	}
+
+	transitpoints, err := SearchCandidatePoint(routeData.Origin, routeData.Destination, routeData.Scenes)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, `{"status": "error server"}`)
+		return nil
+	}
+
+	c.JSON(http.StatusOK, transitpoints)
+
+	return nil
+}
 
 func PullTransitPoints(label string) ([]TransitPoint, error) {
 	var transitpoints []TransitPoint
