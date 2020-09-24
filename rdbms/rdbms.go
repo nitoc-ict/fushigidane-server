@@ -11,7 +11,7 @@ var (
 	Fushigidane *sql.DB
 )
 
-func InitGormClient() error {
+func InitDBClient() error {
 	db, err := sql.Open("mysql", "root:root@/fushigidane")
 	if err != nil {
 		return errors.Wrap(err, "Failed open MySQL")
