@@ -1,13 +1,18 @@
 package gettransitpoints
 
 import (
+	"context"
+	"fmt"
 	"math"
 	"net/http"
 
+	"github.com/kr/pretty"
 	"github.com/labstack/echo"
 	"github.com/nitoc-ict/fushigidane-server/convertaddress"
+	"github.com/nitoc-ict/fushigidane-server/mapsapi"
 	"github.com/nitoc-ict/fushigidane-server/rdbms"
 	"github.com/pkg/errors"
+	"googlemaps.github.io/maps"
 )
 
 func GetTransitPoints(c echo.Context) error {
@@ -23,6 +28,7 @@ func GetTransitPoints(c echo.Context) error {
 
 	transitpoints, err := SearchCandidatePoint(routeData.Origin, routeData.Destination, routeData.Scenes)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, `{"status": "error server"}`)
 		return nil
 	}
@@ -35,8 +41,8 @@ func GetTransitPoints(c echo.Context) error {
 func PullTransitPoints(label []string) ([]TransitPoint, error) {
 	var transitpoints []TransitPoint
 
-	if len(label) == 0 {
-		rows, err := rdbms.Fushigidane.Query(`SELECT * FROM transitpoints WHERE (label = ?);`, label)
+	if len(label) == 1 {
+		rows, err := rdbms.Fushigidane.Query(`SELECT * FROM transitpoints WHERE (label = ?);`, label[0])
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed Query `SELECT * FROM transitpoints WHERE label`")
 		}
@@ -90,6 +96,7 @@ func SearchCandidatePoint(origin, destination string, label []string) ([]Transit
 	if err != nil {
 		return nil, errors.Wrap(err, "failed get destination point lon lat")
 	}
+	fmt.Println("aaa")
 
 	distanceToDestination := euclideanDistance(originPoint.Latitude, originPoint.Longitude, destinationPoint.Latitude, destinationPoint.Longitude)
 
@@ -129,6 +136,22 @@ func SearchCandidatePoint(origin, destination string, label []string) ([]Transit
 
 		transitpoints = append(transitpoints, next)
 	}
+
+	var waypoints []string
+
+	for _, e := range transitpoints {
+		waypoints = append(waypoints, e.Address)
+	}
+
+	r := &maps.DirectionsRequest{
+		Origin:      origin,
+		Destination: destination,
+		Waypoints:   waypoints,
+	}
+
+	route, _, err := mapsapi.FushigidaneMaspApiClient.Directions(context.Background(), r)
+
+	pretty.Println(route)
 
 	return transitpoints, nil
 }
