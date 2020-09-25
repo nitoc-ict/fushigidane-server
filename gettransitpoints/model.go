@@ -9,7 +9,7 @@ type TransitPoint struct {
 }
 
 type RouteRequest struct {
-	Origin      string `json:"origin"`
-	Destination string `json:"destination"`
-	Scenes      string `json:"scenes"`
+	Origin      string   `json:"origin"`
+	Destination string   `json:"destination"`
+	Scenes      []string `json:"scenes"`
 }
