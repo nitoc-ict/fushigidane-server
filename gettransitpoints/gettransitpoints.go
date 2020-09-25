@@ -32,29 +32,49 @@ func GetTransitPoints(c echo.Context) error {
 	return nil
 }
 
-func PullTransitPoints(label string) ([]TransitPoint, error) {
+func PullTransitPoints(label []string) ([]TransitPoint, error) {
 	var transitpoints []TransitPoint
 
-	rows, err := rdbms.Fushigidane.Query(`SELECT * FROM transitpoints WHERE (label = ?);`, label)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed Query `SELECT * FROM transitpoints WHERE label`")
-	}
-
-	for rows.Next() {
-		transitpoint := TransitPoint{}
-		err = rows.Scan(&transitpoint.Id, &transitpoint.Address, &transitpoint.Label, &transitpoint.Latitude, &transitpoint.Longitude)
-
+	if len(label) == 0 {
+		rows, err := rdbms.Fushigidane.Query(`SELECT * FROM transitpoints WHERE (label = ?);`, label)
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed Scan transitpoint")
+			return nil, errors.Wrap(err, "Failed Query `SELECT * FROM transitpoints WHERE label`")
 		}
 
-		transitpoints = append(transitpoints, transitpoint)
+		for rows.Next() {
+			transitpoint := TransitPoint{}
+			err = rows.Scan(&transitpoint.Id, &transitpoint.Address, &transitpoint.Label, &transitpoint.Latitude, &transitpoint.Longitude)
+
+			if err != nil {
+				return nil, errors.Wrap(err, "Failed Scan transitpoint")
+			}
+
+			transitpoints = append(transitpoints, transitpoint)
+		}
+	} else {
+		for _, e := range label {
+			rows, err := rdbms.Fushigidane.Query(`SELECT * FROM transitpoints WHERE (label = ?);`, e)
+			if err != nil {
+				return nil, errors.Wrap(err, "Failed Query `SELECT * FROM transitpoints WHERE label`")
+			}
+
+			for rows.Next() {
+				transitpoint := TransitPoint{}
+				err = rows.Scan(&transitpoint.Id, &transitpoint.Address, &transitpoint.Label, &transitpoint.Latitude, &transitpoint.Longitude)
+
+				if err != nil {
+					return nil, errors.Wrap(err, "Failed Scan transitpoint")
+				}
+
+				transitpoints = append(transitpoints, transitpoint)
+			}
+		}
 	}
 
 	return transitpoints, nil
 }
 
-func SearchCandidatePoint(origin, destination, label string) ([]TransitPoint, error) {
+func SearchCandidatePoint(origin, destination string, label []string) ([]TransitPoint, error) {
 	var transitpoints []TransitPoint
 
 	candidatePoint, err := PullTransitPoints(label)
