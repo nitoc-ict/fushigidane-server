@@ -96,7 +96,6 @@ func SearchCandidatePoint(origin, destination string, label []string) ([]Transit
 	if err != nil {
 		return nil, errors.Wrap(err, "failed get destination point lon lat")
 	}
-	fmt.Println("aaa")
 
 	distanceToDestination := euclideanDistance(originPoint.Latitude, originPoint.Longitude, destinationPoint.Latitude, destinationPoint.Longitude)
 
