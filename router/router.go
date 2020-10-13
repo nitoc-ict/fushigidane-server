@@ -14,8 +14,8 @@ func NewRouter() *echo.Echo {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.POST("/coordinate", convertaddress.ConvertAddress)
-	e.POST("/route", gettransitpoints.GetTransitPoints)
+	e.GET("/coordinate", convertaddress.ConvertAddress)
+	e.GET("/route", gettransitpoints.GetTransitPoints)
 	e.POST("/insertlocation", insertlocation.RecvLocationData)
 
 	return e
