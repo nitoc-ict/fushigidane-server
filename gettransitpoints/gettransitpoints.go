@@ -1,7 +1,6 @@
 package gettransitpoints
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -9,10 +8,8 @@ import (
 	"github.com/kr/pretty"
 	"github.com/labstack/echo"
 	"github.com/nitoc-ict/fushigidane-server/convertaddress"
-	"github.com/nitoc-ict/fushigidane-server/mapsapi"
 	"github.com/nitoc-ict/fushigidane-server/rdbms"
 	"github.com/pkg/errors"
-	"googlemaps.github.io/maps"
 )
 
 func GetTransitPoints(c echo.Context) error {
@@ -96,7 +93,7 @@ func SearchCandidatePoint(origin, destination string, label []string) ([]Transit
 	if err != nil {
 		return nil, errors.Wrap(err, "failed get destination point lon lat")
 	}
-	fmt.Println("aaa")
+	transitpoints = append(transitpoints, TransitPoint{Id: 0, Address: origin, Latitude: originPoint.Latitude, Longitude: originPoint.Longitude})
 
 	distanceToDestination := euclideanDistance(originPoint.Latitude, originPoint.Longitude, destinationPoint.Latitude, destinationPoint.Longitude)
 
@@ -143,15 +140,20 @@ func SearchCandidatePoint(origin, destination string, label []string) ([]Transit
 		waypoints = append(waypoints, e.Address)
 	}
 
-	r := &maps.DirectionsRequest{
-		Origin:      origin,
-		Destination: destination,
-		Waypoints:   waypoints,
-	}
+//	r := &maps.DirectionsRequest{
+//		Origin:      origin,
+//		Destination: destination,
+//		Waypoints:   waypoints,
+//	}
+//
+//	route, _, err := mapsapi.FushigidaneMaspApiClient.Directions(context.Background(), r)
 
-	route, _, err := mapsapi.FushigidaneMaspApiClient.Directions(context.Background(), r)
+//	pretty.Println(route)
 
-	pretty.Println(route)
+	pretty.Println(transitpoints)
+
+
+	transitpoints = append(transitpoints, TransitPoint{Id: 0, Address: origin, Latitude: destinationPoint.Latitude, Longitude: destinationPoint.Longitude})
 
 	return transitpoints, nil
 }
