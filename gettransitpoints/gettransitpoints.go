@@ -24,13 +24,13 @@ func GetTransitPoints(c echo.Context) error {
 		return nil
 	}
 
-	if !strings.Contains(routeData.Origin, "沖縄") || !strings.Contains(routeData.Origin, "okinawa") {
+	if !strings.Contains(routeData.Origin, "沖縄") && !strings.Contains(routeData.Origin, "okinawa") {
 		c.JSON(http.StatusBadRequest, `{"status": "error please address for okinawa"}`)
 
 		return nil
 	}
 
-	if !strings.Contains(routeData.Destination, "沖縄") || !strings.Contains(routeData.Destination, "okinawa") {
+	if !strings.Contains(routeData.Destination, "沖縄") && !strings.Contains(routeData.Destination, "okinawa") {
 		c.JSON(http.StatusBadRequest, `{"status": "error please address for okinawa"}`)
 
 		return nil
