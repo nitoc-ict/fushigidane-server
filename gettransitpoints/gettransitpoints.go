@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"strings"
 
 	"github.com/kr/pretty"
 	"github.com/labstack/echo"
@@ -19,6 +20,18 @@ func GetTransitPoints(c echo.Context) error {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, `{"status": "error bind json"}`)
+
+		return nil
+	}
+
+	if !strings.Contains(routeData.Origin, "沖縄") || !strings.Contains(routeData.Origin, "okinawa") {
+		c.JSON(http.StatusBadRequest, `{"status": "error please address for okinawa"}`)
+
+		return nil
+	}
+
+	if !strings.Contains(routeData.Destination, "沖縄") || !strings.Contains(routeData.Destination, "okinawa") {
+		c.JSON(http.StatusBadRequest, `{"status": "error please address for okinawa"}`)
 
 		return nil
 	}
@@ -93,6 +106,7 @@ func SearchCandidatePoint(origin, destination string, label []string) ([]Transit
 	if err != nil {
 		return nil, errors.Wrap(err, "failed get destination point lon lat")
 	}
+
 	transitpoints = append(transitpoints, TransitPoint{Id: 0, Address: origin, Latitude: originPoint.Latitude, Longitude: originPoint.Longitude})
 
 	distanceToDestination := euclideanDistance(originPoint.Latitude, originPoint.Longitude, destinationPoint.Latitude, destinationPoint.Longitude)
