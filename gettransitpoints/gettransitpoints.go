@@ -90,6 +90,8 @@ func PullTransitPoints(label []string) ([]TransitPoint, error) {
 		}
 	}
 
+    pretty.Println(transitpoints)
+
 	return transitpoints, nil
 }
 
