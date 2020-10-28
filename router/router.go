@@ -20,8 +20,8 @@ func NewRouter() *echo.Echo {
         AllowMethods: []string{http.MethodGet, http.MethodPost},
     }))
 
-	e.GET("/coordinate", convertaddress.ConvertAddress)
-	e.GET("/route", gettransitpoints.GetTransitPoints)
+	e.POST("/coordinate", convertaddress.ConvertAddress)
+	e.POST("/route", gettransitpoints.GetTransitPoints)
 	e.POST("/insertlocation", insertlocation.RecvLocationData)
 
 	return e

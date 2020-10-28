@@ -14,6 +14,8 @@ import (
 func RecvLocationData(c echo.Context) error {
 	var ld RecvData
 	err := c.Bind(&ld)
+
+	log.Println(ld)
 	if err != nil {
 		log.Println(err)
 		return errors.Wrap(err, "failed bind location data")
